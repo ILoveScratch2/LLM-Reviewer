@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![GitHub Actions Version](https://img.shields.io/github/v/release/pritom007/ai-pr-review)](https://github.com/pritom007/ai-pr-review/releases)
-[![Build Status](https://github.com/pritom007/ai-pr-review/actions/workflows/pr-review.yml/badge.svg)](https://github.com/pritom007/ai-pr-review/actions)
+[![Build Status](https://github.com/pritom007/ai-pr-review/actions/workflows/test.yml/badge.svg)](https://github.com/pritom007/ai-pr-review/actions)
 [![Issues](https://img.shields.io/github/issues/pritom007/ai-pr-review)](https://github.com/pritom007/ai-pr-review/issues)
 [![Pull Requests](https://img.shields.io/github/issues-pr/pritom007/ai-pr-review)](https://github.com/pritom007/ai-pr-review/pulls)
 [![Stars](https://img.shields.io/github/stars/pritom007/ai-pr-review)](https://github.com/pritom007/ai-pr-review/stargazers)
