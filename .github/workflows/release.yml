@@ -1,0 +1,39 @@
+name: Automatic Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Important: semantic-release needs full git history.
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install semantic-release and plugins
+        run: |
+          npm install semantic-release \
+            @semantic-release/changelog \
+            @semantic-release/git \
+            @semantic-release/github \
+            @semantic-release/release-notes-generator \
+            @semantic-release/commit-analyzer
+
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release

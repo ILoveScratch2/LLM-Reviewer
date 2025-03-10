@@ -1,0 +1,50 @@
+name: 'AI Pull Request Review'
+description: 'Automated PR reviews using LLMs'
+author: 'Pritom Kumar Mondal'
+
+inputs:
+  github-token:
+    description: 'GitHub token'
+    required: true
+  repository:
+    description: 'GitHub repository'
+    required: true
+  ref:
+    description: 'GitHub ref'
+    required: true
+  api-key:
+    description: 'LLM API key'
+    required: true
+  model-name:
+    description: 'Model name'
+    default: 'gpt-4'
+  base-url:
+    description: 'LLM API base URL'
+    required: false
+  temperature:
+    description: 'Model temperature'
+    default: '0.7'
+  max-tokens:
+    description: 'Max response tokens'
+    default: '1000'
+  language:
+    description: 'Review language'
+    default: 'English'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    GITHUB_TOKEN: ${{ inputs.github-token }}
+    GITHUB_REPOSITORY: ${{ inputs.repository }}
+    GITHUB_REF: ${{ inputs.ref }}
+    INPUT_API_KEY: ${{ inputs.api-key }}
+    INPUT_MODEL_NAME: ${{ inputs.model-name }}
+    INPUT_BASE_URL: ${{ inputs.base-url }}
+    INPUT_TEMPERATURE: ${{ inputs.temperature }}
+    INPUT_MAX_TOKENS: ${{ inputs.max-tokens }}
+    INPUT_LANGUAGE: ${{ inputs.language }}
+
+branding:
+  icon: 'code'       # Official GitHub icons: code, commit, pull-request, issue, security, actions, packages, discussions, projects, releases
+  color: 'blue'       # Official GitHub colors: gray-dark, gray-light, blue, green, orange, red, purple, yellow
