@@ -36,7 +36,7 @@ Automated code review for GitHub pull requests powered by large language models 
 - **Customizable Feedback:** Control review depth, creativity, and response length (To-Do)
 - **Rich Markdown Formatting:** Clear, structured, and detailed review outputs
 - **Enterprise Ready:** Dockerized with secure handling of secrets
-- **Multi-language Support:** Reviews available in 100+ languages (Any language supported by the LLM provider)
+- **Multi-language Support:** Reviews are available in 100+ languages (Any language supported by the LLM provider)
 
 ## Supported Providers 🤖
 
@@ -55,7 +55,7 @@ In your GitHub repository:
 
 ```yaml
 Settings → Secrets and variables → Actions → New repository secret
-Name: GROQ_API_KEY  # or OPENAI_API_KEY
+Name: INPUT_API_KEY  # make sure this is the name of the secret
 Value: your-api-key-here
 ```
 
@@ -76,13 +76,14 @@ jobs:
     steps:
       - uses: pritom007/ai-pr-review@v1
         with:
-          api-key: ${{ secrets.GROQ_API_KEY }}
+          api-key: ${{ secrets.INPUT_API_KEY }}
           model-name: "llama3-70b-8192"
           base-url: "https://api.groq.com/openai/v1"
           temperature: "0.7"
           max-tokens: "1000"
           language: "English"
 ```
+Set the llm model api key in your github secrets as `INPUT_API_KEY`. Also make sure you gave `read` permission to the `contents` and `write` premission to the `pull-requests`.
 
 ## Configuration ⚙️
 
@@ -102,7 +103,7 @@ with:
   system-prompt: "Act as a principal engineer at a leading tech company"
   review-focus: "security,performance,readability"
 ```
-
+(To be done)
 ## Example Output 📝
 
 ```markdown
