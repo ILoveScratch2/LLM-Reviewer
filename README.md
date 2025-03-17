@@ -106,24 +106,38 @@ with:
 (To be done)
 ## Example Output 📝
 
-```markdown
-## AI Code Review Summary
+## .github/workflows 
+### test.yml
+- [LOW] [Code Quality] Line 1-31: The file name 'test.yml' might be misleading as it seems to be a workflow for AI PR review rather than a test. Consider renaming it to something more descriptive like 'ai-pr-review.yml'. 
+```yml
+name: AI PR Review
+```
+- [MEDIUM] [Security] Line 22: The 'github-token' is passed as an input to the 'ai-pr-review' action. Although it's using the 'secrets.GITHUB_TOKEN', ensure that the 'pritom007/ai-pr-review' action handles the token securely.
+```yml
+      - name: AI PR Review
+        uses: pritom007/ai-pr-review@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+- [MEDIUM] [Service boundaries] Line 20-30: The workflow uses an external action 'pritom007/ai-pr-review' which interacts with an external API 'https://api.groq.com/openai/v1'. This might introduce service boundary issues, such as dependency on the external API or potential data leaks.
+```yml
+      - name: AI PR Review
+        uses: pritom007/ai-pr-review@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.ref }}
+          api-key: ${{ secrets.API_KEY }}
+          api-url: https://api.groq.com/openai/v1
+```
 
-### 🛠️ Code Quality
-- ✅ **Good:** Consistent error handling across modules
-- ⚠️ **Improvement:** Abstract repetitive validation logic into helper functions
+- [HIGH] [Error handling] Line 19-30: There is no error handling mechanism in place for the 'ai-pr-review' action. Consider adding try-except blocks or error handling mechanisms to handle potential errors or exceptions raised by the action.
+```yml
+      - name: AI PR Review
+        uses: pritom007/ai-pr-review@v1
+        with:
+          # ...
 
-### 🚨 Potential Issues
-- 🔒 **Security:** Unsanitized inputs detected (`userProfile.js:82`)
-- 🐞 **Bug Risk:** Possible null-pointer exception (`dataProcessor.js:45`)
-
-### 🚀 Optimization
-- ⚡ **Performance:** Implement caching for frequent `fetchUserData()` calls
-- 📦 **Memory Efficiency:** Stream large datasets rather than fully loading them
-
-### 📚 Documentation
-- 📝 Add detailed JSDoc comments for public methods
-- 📖 Update the README with new API usage examples
 ```
 
 ## Roadmap 🗺️
