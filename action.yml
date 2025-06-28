@@ -1,4 +1,4 @@
-name: 'AI Pull Request Review'
+name: 'PR Review LLM'
 description: 'Automated PR reviews using LLMs'
 author: 'Pritom Kumar Mondal'
 

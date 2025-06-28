@@ -6,5 +6,9 @@ COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/ /app/
+COPY debug_env.py /app/
+
+# Add debug option
+ENV DEBUG_MODE=false
 
 ENTRYPOINT ["python", "/app/main.py"]

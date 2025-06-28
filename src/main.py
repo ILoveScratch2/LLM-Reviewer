@@ -18,10 +18,28 @@ MIN_FILE_TOKENS = 200
 def get_pr_diff(github_token: str, repo_name: str, pr_number: int) -> List[Dict]:
     """Retrieve PR diff with validation"""
     try:
+        logging.debug(f"Attempting to login with token: {'*' * 10 if github_token else 'None'}")
+        logging.debug(f"Repository: {repo_name}, PR: {pr_number}")
+
+        if not github_token:
+            raise ValueError("GitHub token is required")
+        if not repo_name:
+            raise ValueError("Repository name is required")
+        if not pr_number:
+            raise ValueError("PR number is required")
+
         gh = github3.login(token=github_token)
+        if not gh:
+            raise ValueError("Failed to authenticate with GitHub")
+
         owner, repo_name = repo_name.split('/')
         repo = gh.repository(owner, repo_name)
+        if not repo:
+            raise ValueError(f"Repository {owner}/{repo_name} not found")
+
         pr = repo.pull_request(pr_number)
+        if not pr:
+            raise ValueError(f"Pull request #{pr_number} not found")
         
         # Get actual diff text from GitHub API
         diff_response = repo._get(f"https://api.github.com/repos/{owner}/{repo_name}/pulls/{pr_number}/files")
@@ -136,10 +154,26 @@ async def synthesize_reviews(reviews: List[str], config: Dict) -> str:
     return response.choices[0].message.content
 
 async def main():
+    # Validate required environment variables
+    api_key = os.getenv('INPUT_API_KEY')
+    if not api_key:
+        logging.error("INPUT_API_KEY environment variable is required")
+        return
+
+    github_token = os.getenv('GITHUB_TOKEN')
+    if not github_token:
+        logging.error("GITHUB_TOKEN environment variable is required")
+        return
+
+    repo_name = os.getenv('GITHUB_REPOSITORY')
+    if not repo_name:
+        logging.error("GITHUB_REPOSITORY environment variable is required")
+        return
+
     config = {
         'openai_params': {
-            'api_key': os.getenv('INPUT_API_KEY'),
-            'base_url': os.getenv('INPUT_BASE_URL', 'https://api.openai.com')
+            'api_key': api_key,
+            'base_url': os.getenv('INPUT_BASE_URL', 'https://api.openai.com/v1')
         },
         'model_name': os.getenv('INPUT_MODEL_NAME', 'gpt-4'),
         'temperature': float(os.getenv('INPUT_TEMPERATURE', 0.7)),
@@ -174,22 +208,62 @@ Format as:
     }
     
     tokenizer = tiktoken.get_encoding("cl100k_base")
-    
-    # Get PR data
-    github_token = os.getenv('GITHUB_TOKEN')
-    repo_name = os.getenv('GITHUB_REPOSITORY')
-    pr_number = int(os.getenv('GITHUB_REF').split('/')[-2])
+
+    # Get PR data (variables already validated above)
+
+    # Extract PR number from GITHUB_REF (refs/pull/{pr_number}/merge or refs/pull/{pr_number}/head)
+    github_ref = os.getenv('GITHUB_REF', '')
+    logging.debug(f"GITHUB_REF: {github_ref}")
+
+    try:
+        if 'pull' in github_ref:
+            pr_number = int(github_ref.split('/')[2])
+        else:
+            # Fallback: try to get from GITHUB_EVENT_PATH
+            import json
+            event_path = os.getenv('GITHUB_EVENT_PATH')
+            if event_path:
+                with open(event_path, 'r') as f:
+                    event_data = json.load(f)
+                    pr_number = event_data.get('pull_request', {}).get('number')
+            else:
+                raise ValueError("Cannot determine PR number")
+    except (ValueError, IndexError, KeyError) as e:
+        logging.error(f"Failed to extract PR number: {e}")
+        logging.error(f"GITHUB_REF: {github_ref}")
+        return
     
     files = get_pr_diff(github_token, repo_name, pr_number)
+
+    if not files:
+        logging.warning("No files found in PR diff")
+        # Post a simple message instead of failing
+        gh = github3.login(token=github_token)
+        owner, repo = repo_name.split('/')
+        pr = gh.repository(owner, repo).pull_request(pr_number)
+        pr.create_comment("🤖 AI Review: No code changes detected in this PR.")
+        return
+
     chunks = chunk_files(files, tokenizer)
-    
+
+    if not chunks:
+        logging.warning("No valid chunks created from files")
+        return
+
     # Process chunks in parallel
     chunk_reviews = await asyncio.gather(*[
         process_chunk(chunk, config) for chunk in chunks
     ])
-    
+
+    # Filter out empty reviews
+    valid_reviews = [review for review in chunk_reviews if review and review.strip()]
+
+    if not valid_reviews:
+        logging.warning("No valid reviews generated")
+        return
+
     # Generate final summary
-    final_report = await synthesize_reviews(chunk_reviews, config)
+    final_report = await synthesize_reviews(valid_reviews, config)
     
     # Post to GitHub
     gh = github3.login(token=github_token)
